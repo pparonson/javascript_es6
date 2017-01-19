@@ -644,5 +644,140 @@ const reduceResult = R.reduce( reduceForSum, 100, myArray );
  and returns a new function that returns true when the original function returns
  a falsy value, and false when the original function returns a truthy value.
 */
-const complementFilterResult = R.filter( R.complement( isEven ), myArray );
-console.log( complementFilterResult );
+// Even better is to give the complemented function its own name so it can be
+// reused:
+const isOdd = R.complement( isEven );
+// Note that complement implements the same idea for functions as the ! (not)
+// operator does for values.
+// console.log( R.filter( isOdd, myArray ) );
+/*
+ Sometimes we want to apply several functions to some data in a pipeline
+ fashion. For example, we might want to take two numbers, multiply them
+ together, add one, and square the result.
+*/
+const multiplyPipe = ( a, b ) => a * b;
+const incrementPipe = x => x + 1;
+const squarePipe = x => x * x;
+
+const operate = ( x, y ) => {
+    const product = multiplyPipe( x, y );
+    const increment = incrementPipe( product );
+    const square = squarePipe( increment );
+
+    return square;
+};
+// PIPE: Ramda provides the pipe function, which takes a list of one or more functions
+// and returns a new function.
+// Note that all of the functions after the first must only take a single
+// argument.
+const operatePipe = R.pipe( multiplyPipe, incrementPipe, squarePipe );
+
+//COMPOSE: Another way we could have written our original operate function is to
+// inline all of the temporary variables:
+// Personally, I think I like this one..  It reminds me of Clojure syntatically
+// version1 without R.compose()
+const operateWithoutRCompose = ( x, y ) =>
+    squarePipe(
+        incrementPipe(
+            multiplyPipe( x, y ) ) );
+// In that form, however, it lends itself to be rewritten using Ramda’s compose
+// function.
+// const operateCompose = R.compose( squarePipe, incrementPipe, multiplyPipe );
+// This is exactly the same as pipe above, but with the functions in the
+// opposite order. In fact, Ramda’s compose function is written in terms of
+// pipe.
+
+// I always think of compose this way: compose(f, g)(value) is equivalent to
+// f(g(value)).
+
+// As with pipe, note that all of the functions except the last must only take a
+// single argument.
+
+/*
+ what if we want to use functions that take more than one argument?
+
+ let’s say we have a collection of book objects and we want to find the titles
+ of all of the books published in a given year.
+*/
+// const publishedInYear = ( book, year ) => book.year === year; // return boolean
+
+// const titlesForYear = ( books, year ) => {
+//   const selected = filter( book => publishedInYear( book, year ), books );
+//
+//   return map( book => book.title, selected );
+// };
+// It would be nice to combine the filter and map into a pipeline, but we don’t
+// know how to do that yet because filter and map both take two arguments.
+
+// change publishedInYear into a function that returns another function.
+// Full function version:
+// const publishedInYear = year => book => book.year === year;
+// const titlesForYear = ( books ) => {
+//     const selected = R.filter(
+//         publishedInYear( year ), // immed invoked and return a fn with books arg
+//         books );
+//     return map( book => book.title, selected );
+// };
+
+// Let’s go back to our original example and use one of these functions instead
+// of re-writing publishedInYear. Since we want to supply only the year, and
+// that is the right-most argument, we need to use partialRight.
+// const publishedInYear = ( book, year ) => book.year === year;
+// const titlesForYear = ( books ) => {
+//     const selected = R.filter( R.partialRight( publishedInYear( book ), books ) );
+//     return R.map( book => book.title, selected );
+// };
+
+// R.curry:
+// In Ramda, a curried function can be called with only a subset of its
+// arguments, and it will return a new function that accepts the remaining
+// arguments. If you call a curried function with all of its arguments, it will
+// call just call the function.
+// In general, I only curry functions when I find I need to use partial in more
+// than one place due to performance hit.
+// const publishedInYear = ( book, year ) => book.year === year );
+// const titlesForYear = books => {
+//     const selected = R.filter( publishedInYear( book ), books );
+//     return R.map( book => book.title, selected );
+// };
+// NOTICE: almost every Ramda function is written so that the data to be
+// operated on comes last.
+// const publishedInYear = ( year, book ) => book.year === year ); // takes 2 args
+// const titlesForYear = ( books, year ) => {
+//   const selected = filter( publishedInYear( year ), books );
+//
+//   return map( book => book.title, selected ); // takes two args
+// };
+/*
+ Let’s see if we can now move our filter and map calls into a pipeline. Here’s
+ the current state of the code
+*/
+
+// NOTICE: almost every Ramda function is curried by default
+// const publishedInYear = R.curry( ( book, year ) => book.year === year );
+// const titlesForYear = R.curry( ( books ) => {
+//     // const selected = R.filter( publishedInYear( book ), books );
+//     // return R.map( book => book.title, selected );
+//     return R.pipe(
+//         R.filter( publishedInYear( book ) ),
+//         R.map( book => book.title )
+//     )( books );
+// } );
+// __________________________________________________________________________
+
+/*
+ Thinking in Ramda: Declarative Programming
+*/
+// const multiplyPipe = ( a, b ) => a * b;
+// const incrementPipe = x => x + 1;
+// const squarePipe = x => x * x;
+// const operatePipe = R.pipe( multiplyPipe, incrementPipe, squarePipe );
+// Rewrite / refactor using Ramda constructs
+// First, refactor square in terms of R.multiply
+const square = x => R.multiply( x, x );
+const operateRamda = R.pipe( R.multiply, R.inc, R.square );
+// __________________________________________________________________________
+
+/*
+ Comparison
+*/
