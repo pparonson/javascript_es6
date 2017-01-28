@@ -1,4 +1,7 @@
 console.log( 'starting.. ' );
+// Series: So You Want to be a Functional Programmer
+// Series: Courageous Software: Thinking in Ramda
+
 // /*
 //  * Javascript: One Parameter Functions
 //  * write one parameter functions for functionalities that are clearly two
@@ -781,30 +784,30 @@ console.log( 'starting.. ' );
 // // __________________________________________________________________________
 
 // /*
-//  Comparison
+//  Comparison and point free
 // */
-// const forever21 = age => {
-//     return R.ifElse(R.gte(R.__, 21), R.always( 21 ), R.inc)(age);
-// };
-//
-// const alwaysDrivingAge = age => {
-//     return R.ifElse( R.lt( R.__, 16 ), R.always( 16 ), R.identity )( age );
-// };
-//
-// // const alwaysDrivingAge = age => R.ifElse( R.lt( R.__, 16 ), R.always( 16 ), a => a )( age );
-//
+// const forever21 = age => age >= 21 ? 21 : age + 1;
+// const forever21 = age => R.ifElse( R.gte( R.__, age ), () => 21, R.add( R.__, 1) )(age);
+
+// point-free
+// const forever21 = R.ifElse( R.gte( R.__, 21 ), R.always(21), R.inc );
+
+// const alwaysDrivingAge = age => ifElse(lt(__, 16), always(16), a => a)(age)
+// const alwaysDrivingAge = age => R.ifElse( R.lt( R.__, 16 ), R.always(16), age => age )( age );
+
+// point-free
+// const alwaysDrivingAge = R.ifElse( R.lt( R.__, 16 ), R.always(16), R.identity() );
 // // __________________________________________________________________________
 
-// const add = R.curry( (value1, value2) => value1 + value2 );
-// const multiply = (value1) => value1 * 5;
-
+// const add = R.curry( (x, y) => x + y );
+// const multiply = (x) => x * 5;
+//
 // const mult5AfterAdd10 =
 //     R.compose(
-//         R.multiply(5),
-//         R.add(10)
+//         multiply,
+//         add
 //     );
-//
-//
+
 // const publishedInYear = R.curry( (year, book) => book.year === year );
 //
 // const titlesForYear = (year) => {
@@ -866,27 +869,28 @@ console.log( 'starting.. ' );
 // console.log( `Result: ${result}` );
 // // __________________________________________________________________________
 
-// 'this' considerations
+// // 'this' considerations
+// const value = 'Value in global scope';
 // const obj = {
-//     value: 'Hello world!',
+//     value: 'value in obj scope',
 //     method() {
 //         alert( this.value );
 //     }
 // };
 // const obj2 = {
-//     value: 'Goodbye',
+//     value: 'value in obj2 scope',
 //     method() {
-//         console.log( 'bind this: ', obj.method.bind(this) );
-//         console.log( 'bind obj:', obj.method.bind(obj) );
-//         console.log('this: ', this);
+//         // console.log( 'bind this: ', obj.method.bind(this) );
+//         // console.log( 'bind obj:', obj.method.bind(obj) );
+//         // console.log('this: ', this);
 //         obj.method.bind( obj );
 //     }
 // };
-
+//
 // this.x = 9;    // this referes to global "window" object here in the browser
 // var module = {
 //   x: 81,
-//   getX: function() { return this.x; }
+//   getX: function() { return this.x; } // anonymous fn inside obj
 // };
 //
 // module.getX(); // 81
@@ -900,16 +904,147 @@ console.log( 'starting.. ' );
 // // global var x with module's property x
 // var boundGetX = retrieveX.bind(module);
 // boundGetX(); // 81
+
 // // __________________________________________________________________________
 
 /*
  Referential Transparency..
 */
-const quoteString = str => `" ${str} "`;
-const errorString = key => `Unable to find: "${ str }"`;
+// const quoteString = str => `" ${str} "`;
+// const errorString = key => `Unable to find: "${ str }"`;
+// // __________________________________________________________________________
+//
+// // const add = (a, b) => a + b;
+// // const add = a => b => a + b; // curried
+// // const add = R.curry( (a, b) => a + b ); // ramda curried
 // // __________________________________________________________________________
 
-// const add = (a, b) => a + b;
-// const add = a => b => a + b; // curried
-// const add = R.curry( (a, b) => a + b ); // ramda curried
-const add = R.add(a, b); // ramda add fn curries by default
+// const users = [{name: 'chet', age:25}, {name:'joe', age:24}];
+// // sort user by the age property
+// // const sorted = R.sort()
+// // get each name property
+// // join the names with a comma
+// const joinNames = R.map( (item) => {
+//     return R.join();
+// }, users);
+
+// const multiply = (a, b) => a * b;
+// const addOne = x => x + 1;
+// const square = x => x * x;
+// const square = x => R.multiply(x, x);
+//
+// const operate = R.compose(
+//     square,
+//     R.add(1),
+//     R.multiply
+// );
+// // __________________________________________________________________________
+// const OUR_COUNTRY = 'United States';
+const person1 = {
+    firstName: 'Elle',
+    age: 17,
+    address: {
+        street: '7358 South Knolls Way',
+        zipCode: 80015
+    },
+    birthCountry: 'United States',
+    naturalizationDate: null
+};
+const person2 = {
+    firstName: 'Ashley',
+    age: 24,
+    address: {
+        street: '7358 South Knolls Way',
+        zipCode: 80122
+    },
+    birthCountry: 'Algeria',
+    naturalizationDate: '12/18/2002'
+};
+// assoc returns a new object with the added or updated property value, leaving
+// the original object unchanged.
+// assoc('name', 'New name', person).
+// const updatedPerson1 = R.assoc( 'firstName', 'Brooke', person1 );
+
+// // assocPath(['address', 'zipcode'], '97504', person)
+// // const updatedPerson1 = R.assocPath( [ 'address', 'zipCode' ], 80122, person1 );
+
+
+// dissoc returns a new object with the removed prop value, leaving
+// the original object unchanged.
+// const updatedPerson1 = R.dissoc('firstName', person1);
+// const updatedPerson1 = R.dissocPath( [ 'address', 'street' ], person1 );
+//
+
+// R.keys: returns array of prop keys; R.values return array of prop values
+// console.log( R.keys(person1), R.values(person2) );
+
+// // const wasBornInCountry = person => person.birthCountry === OUR_COUNTRY;
+// // const wasBornInCountry = person => R.equals( OUR_COUNTRY )( R.prop('birthCountry')(person) );
+// const wasBornInCountry = R.compose( R.equals( OUR_COUNTRY ), R.prop('birthCountry') ); // point-free
+//
+// // const wasNaturalized = person => Boolean(person.naturalizationDate);
+// // const wasNaturalized = person => Boolean( R.prop('naturalizationDate')(person) );
+// // const wasNaturalized = person => R.compose( Boolean, R.prop('naturalizationDate') )(person);
+// const wasNaturalized = R.compose( Boolean, R.prop('naturalizationDate') ); // point-free
+//
+//
+// // const isOver18 = person => person.age >= 18;
+// // const isOver18 = person => R.gte( 18 )( R.prop('age')(person) );
+// // const isOver18 = person => R.compose( R.gte( 18 ), R.prop('age') )(person);
+// const isOver18 = R.compose( R.gte( 18 ), R.prop('age') ); // point-free
+//
+// const isCitizen = R.either( wasBornInCountry, wasNaturalized );
+// const isEligibleToVote = R.both( isOver18, isCitizen );
+
+/*
+R.evolve()
+*/
+// const nextAge = R.compose( R.inc, R.prop('age')); // observe data last and point-free syntax
+// // const celebrateBirthday = person => R.assoc('age', nextAge(person), person);
+//
+// const celebrateBirthday = R.evolve( {
+//     firstName: () => 'Brookey',
+//     age: R.inc
+// });
+//
+// const tomato  = {
+//     firstName: '  Tomato ',
+//     data: {
+//         elapsed: 100,
+//         remaining: 1400
+//     },
+//     id:123
+// };
+// const transformations = {
+//   firstName: R.trim, // transformation function
+//   lastName: R.trim, // Will not get invoked.
+//   data: {
+//       elapsed: R.add(1),
+//       remaining: R.add(-1)
+//   }
+// };
+// const changeCrop = R.evolve( {
+//     firstName: () => 'potatoe',
+//     lastName: () => 'dirt',
+//     data: {
+//         elapsed: R.inc,
+//         remaining: R.dec
+//     }
+// } ); //=> {firstName: 'Tomato', data: {elapsed: 101, remaining: 1399}, id:123}
+
+/*
+R.merge()
+*/
+// function f(a, b, options = {}) {
+//   const defaultOptions = { value: 42, local: true }
+//   const finalOptions = merge(defaultOptions, options)
+// }
+
+/*
+Ramda and array elements
+*/
+const numbers = [10, 20, 30, 40, 50, 60];
+const numbers2 = [ 1, 2, 3, 4, 5, 6 ];
+const result = [ ...numbers, ...numbers2 ];
+console.log( result );
+R.nth( 2, numbers );
